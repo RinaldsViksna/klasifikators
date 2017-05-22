@@ -6,7 +6,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.nio.ByteBuffer;
 
-
+/* @Author: https://gist.github.com/jbzdak/61398b8ad795d22724dd */
 public class Beep {
 
     /**
