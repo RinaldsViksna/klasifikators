@@ -1,6 +1,8 @@
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -31,31 +33,21 @@ public class Klasifikatori {
 				}
 			}
 			
-			String positiveHeap = "";
-			String negativeHeap = "";
-			String neutralHeap = "";
+			// 2.2. No apmācības kopas izveidojam unigrams sarakstus (vienkārši sadalot tvītu tekstus pēc whitespace)
+			String allTweets = "";
 			for (Node node : trainingSet) {
 				Element eNode = (Element) node;
 				// label={"negative","positive","neutral"}
 				String label = eNode.getAttribute("label");
 				String content = eNode.getElementsByTagName("content").item(0).getTextContent();
-				if (label.equals("positive")){
-					positiveHeap += content;
-				} else if (label.equals("negative")){
-					negativeHeap += content;
-				} else {
-					neutralHeap += content;
-				}
+				allTweets += content;
 				
-//				System.out.println("label : " + label);
-//				System.out.println("content : " + content);
-				
+				Set<String> tweetUniqueUnigrams = getUniqueUnigrams(content);
 			} 
-			String[] str = neutralHeap.split(" ");
-			System.out.println( iteracija+ " "+ str[22]);
+
 
 			
-		}
+		}//for (int iteracija = 0; iteracija < 10; iteracija++){
 
 	}
 	
@@ -92,4 +84,28 @@ public class Klasifikatori {
 		return nList;
 	}//public static NodeList getTweets()
 
+	public static Set<String> getUniqueUnigrams(String content){
+		String[] allUnigrams = content.split("\\s+");
+		ArrayList<String> cleanedUnigrams = new ArrayList<String>();
+		for (String unigram : allUnigrams) {
+			if (unigram.contains("#") ){
+				cleanedUnigrams.add("hashtag");
+				continue;
+			}
+			if ( unigram.contains("@") ){
+				cleanedUnigrams.add("user");
+				continue;
+			}
+			if ( unigram.contains("http://") ){
+				cleanedUnigrams.add("link");
+				continue;
+			}
+			cleanedUnigrams.add(unigram);
+		}
+
+		Set<String> uniqueUnigrams = new HashSet<String>(cleanedUnigrams);
+//		System.out.println("Total unigrams: " + cleanedUnigrams.size());
+//		System.out.println("Unique unigrams: " + uniqueUnigrams.size());
+		return uniqueUnigrams;
+	}
 }
