@@ -79,7 +79,7 @@ public class K2Weka {
 			// 2.3. Ar Weka izveidojam Naive Bayes un Support Vector Machine modeļus
 			
 			// Izveidojam Naive Bayes klasifikatoru
-			Classifier nbModel = (Classifier)new NaiveBayesMultinomial();
+			NaiveBayesMultinomial nbModel = new NaiveBayesMultinomial();
 			try {
 				nbModel.buildClassifier(isTrainingSet);
 			} catch (Exception e) {
@@ -214,7 +214,8 @@ public class K2Weka {
 			List<String> tweetUniqueUnigrams = getUniqueUnigrams(content);
 			List<String> tweetUnigrams = getUnigrams(content);
 			// Izveido piemēru
-			Instance tweetInstance = new SparseInstance(allUniqueUnigrams.size()+1);
+			Instance tweetInstance = new DenseInstance(allUniqueUnigrams.size()+1);
+//			Instance tweetInstance = new SparseInstance(allUniqueUnigrams.size()+1);
 			for (int i = 0; i < allUniqueUnigrams.size(); i++) {
 				int occurences = Collections.frequency(tweetUnigrams, allUniqueUnigrams.get(i));
 				tweetInstance.setValue((Attribute)tweetAttributes.elementAt(i), occurences);
