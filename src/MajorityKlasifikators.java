@@ -1,10 +1,6 @@
-import weka.core.Attribute;
 import weka.core.Capabilities;
-import weka.core.FastVector;
 import weka.core.Instance;
 import weka.core.Instances;
-
-import java.util.Arrays;
 
 import weka.classifiers.Classifier;
 
@@ -18,7 +14,7 @@ public class MajorityKlasifikators implements Classifier{
 	
 	public void buildClassifier(Instances instances){
 		
-		double[] classes = new double[instances.classAttribute().numValues()];
+		double[] classes = new double[instances.classAttribute().numValues()]; // garums = Klašu (Sentimentu) skaits
 		
         for (int i = 0; i < instances.numInstances(); i++) {
             Instance instance = instances.instance(i);
@@ -34,7 +30,6 @@ public class MajorityKlasifikators implements Classifier{
                 maxIndex = i;
             }
         }
-        System.out.println(maxIndex);
         this.majorityClass = maxIndex; // Saglabā dominantās klases indeksu instances.classAttribute()
 	}
 
@@ -55,5 +50,4 @@ public class MajorityKlasifikators implements Classifier{
 		return null;
 	}
 }
-
 
