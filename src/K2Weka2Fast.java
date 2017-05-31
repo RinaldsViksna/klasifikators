@@ -42,7 +42,7 @@ public class K2Weka2Fast {
 		List<String> totalUniqueUnigrams = Unigram.getUniqueUnigrams(allContent);
 		System.out.println("Total number of unique unigrams: "+ totalUniqueUnigrams.size());
 		// Ģenerē pilno kopu
-		Instances totalSet = generateSet("ApmacibasKopa", alltweets, totalUniqueUnigrams);	
+		Instances totalSet = generateSet("PilnaKopa", alltweets, totalUniqueUnigrams);	
 		totalSet.randomize(new Random(666));
 		
 		// Statistikai Confusion Matrix
