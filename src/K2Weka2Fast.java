@@ -22,7 +22,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 
-public class K2Weka {
+public class K2Weka2Fast {
 	public static final List<String> tweetSentiments = Arrays.asList("positive", "negative", "neutral");
 //	public static final List<String> tweetSentiments = Arrays.asList("positive", "negative");
 	
@@ -31,7 +31,20 @@ public class K2Weka {
 		//	(ir ok, ja dažās apakškopas būs par vienu tvītu lielākas, ja tvītu skaits nedalās ar 10).
 		List <Tweet> alltweets = getTweets();
 		System.out.println("Izmantojamo tvītu skaits failā " + alltweets.size());
-
+		
+		String allContent = "";
+		for (Tweet tweet : alltweets) {
+			
+			String content = tweet.getContent();
+			
+			allContent += content;
+		}
+		List<String> totalUniqueUnigrams = Unigram.getUniqueUnigrams(allContent);
+		System.out.println("Total number of unique unigrams: "+ totalUniqueUnigrams.size());
+		// Ģenerē pilno kopu
+		Instances totalSet = generateSet("ApmacibasKopa", alltweets, totalUniqueUnigrams);	
+		totalSet.randomize(new Random(666));
+		
 		// Statistikai Confusion Matrix
 		double[][] bayesMultiResults = new double[tweetSentiments.size()][tweetSentiments.size()]; 
 		double[][] svmResults = new double[tweetSentiments.size()][tweetSentiments.size()]; 
@@ -42,34 +55,18 @@ public class K2Weka {
 			System.out.println("Iterācija "+ iteracija);
 			
 			// 2.1. Izveidojam apmācības kopu no 9 apakškopām un validēšanas kopu no pārpalikušās vienas
-			List <Tweet> trainingSet = new ArrayList<Tweet>();
-			List <Tweet> testSet = new ArrayList<Tweet>();
+			Instances isTrainingSet = new Instances(totalSet, 0, 0);
+			Instances isTestSet = new Instances(totalSet, 0, 0);
 			
-			for (int temp = 0; temp < alltweets.size(); temp++) {
-				if (temp % 10 == iteracija){
-					testSet.add(alltweets.get(temp));
-				} else {
-					trainingSet.add(alltweets.get(temp));
-				}
-			}
-
-			
-			// 2.2. No apmācības kopas izveidojam unigrams sarakstus (vienkārši sadalot tvītu tekstus pēc whitespace)
-			String allTweets = "";
-			 
-			for (Tweet tweet : trainingSet) {
-				
-				String content = tweet.getContent();
-				
-				allTweets += content;
-			}
-			
-			List<String> allUniqueUnigrams = Unigram.getUniqueUnigrams(allTweets);
-			System.out.println("Total number of unique unigrams: "+ allUniqueUnigrams.size());
-			// Ģenerē apmācības kopu
-			Instances isTrainingSet = generateSet("ApmacibasKopa", trainingSet, allUniqueUnigrams);
-			// Ģenerē testa kopu
-			Instances isTestSet = generateSet("TestaKopa",testSet, allUniqueUnigrams);
+			isTestSet = totalSet.testCV(10, iteracija);
+			isTrainingSet = totalSet.trainCV(10, iteracija);
+//			for (int temp = 0; temp < totalSet.size(); temp++) {
+//				if (temp % 10 == iteracija){
+//					isTestSet.add(totalSet.instance(temp));
+//				} else {
+//					isTrainingSet.add(totalSet.instance(temp));
+//				}
+//			}
 
 			// 2.3. Ar Weka izveidojam Naive Bayes un Support Vector Machine modeļus
 			
@@ -168,8 +165,8 @@ public class K2Weka {
 			String label = tweet.getLabel();
 			String content = tweet.getContent();
 			
-			List<String> tweetUnigrams = Unigram.getUniqueUnigrams(content);// Nominal attributes
-//			List<String> tweetUnigrams = Unigram.getUnigrams(content);		// Numerical attributes
+//			List<String> tweetUnigrams = Unigram.getUniqueUnigrams(content);// Nominal attributes
+			List<String> tweetUnigrams = Unigram.getUnigrams(content);		// Numerical attributes
 			// Izveido piemēru
 			Instance tweetInstance = new DenseInstance(allUniqueUnigrams.size()+1);
 //			Instance tweetInstance = new SparseInstance(allUniqueUnigrams.size()+1);

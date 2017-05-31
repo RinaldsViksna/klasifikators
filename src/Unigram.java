@@ -38,6 +38,10 @@ public class Unigram {
 			}
 			unigram = unigram.toLowerCase();
 			unigram = unigram.replaceAll("[^A-Za-z0-9]", "");
+			// remove empty unigrams
+//			if ( unigram.equals("") ){
+//				continue;
+//			}
 			cleanedUnigrams.add(unigram);
 		}
 		

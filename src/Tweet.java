@@ -1,5 +1,3 @@
-import java.util.List;
-
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
@@ -13,9 +11,6 @@ public class Tweet {
 	private String target;	// 
 	private String username;// Lietotājs, kas tvīto
 	
-	public List<String> unigrams;
-	public List<String> uniqueUnigrams;
-	
 	public Tweet(Node node){
 		Element eNode = (Element) node;
 //		this.tweetid = Double.parseDouble(eNode.getAttribute("tweetid"));
@@ -24,8 +19,6 @@ public class Tweet {
 		this.target = eNode.getAttribute("target");
 		this.username = eNode.getAttribute("username");
 		
-		this.unigrams = Unigram.getUnigrams(content);
-		this.uniqueUnigrams = Unigram.getUniqueUnigrams(content);
 	}
 	public double getTweetid() {
 		return tweetid;
