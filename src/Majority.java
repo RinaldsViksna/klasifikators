@@ -4,11 +4,11 @@ import weka.core.Instances;
 
 import weka.classifiers.Classifier;
 
-public class MajorityKlasifikators implements Classifier{
+public class Majority implements Classifier{
 	
 	public double majorityClass;
 	
-	public MajorityKlasifikators() {
+	public Majority() {
 		
 	}
 	

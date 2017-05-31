@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 import weka.classifiers.Classifier;
+import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.bayes.NaiveBayesMultinomial;
 import weka.classifiers.functions.LibSVM;
 import weka.core.Attribute;
@@ -34,7 +35,7 @@ public class K2Weka {
 	public static void main(String[] args) {
 		// 1. Ielādējam train.xml, randomizējam tvītu secību, sadalām datus 10 vienāda izmēra apakškopās 
 		//	(ir ok, ja dažās apakškopas būs par vienu tvītu lielākas, ja tvītu skaits nedalās ar 10).
-		List <Node> alltweets = getTweets();
+		List <Tweet> alltweets = getTweets();
 		System.out.println("Izmantojamo vietu skaits failā " + alltweets.size());
 
 		// Statistikai Confusion Matrix
@@ -47,8 +48,8 @@ public class K2Weka {
 			System.out.println("Iterācija "+ iteracija);
 			
 			// 2.1. Izveidojam apmācības kopu no 9 apakškopām un validēšanas kopu no pārpalikušās vienas
-			List <Node> trainingSet = new ArrayList<Node>();
-			List <Node> testSet = new ArrayList<Node>();
+			List <Tweet> trainingSet = new ArrayList<Tweet>();
+			List <Tweet> testSet = new ArrayList<Tweet>();
 			
 			for (int temp = 0; temp < alltweets.size(); temp++) {
 				if (temp % 10 == iteracija){
@@ -61,15 +62,14 @@ public class K2Weka {
 			// 2.2. No apmācības kopas izveidojam unigrams sarakstus (vienkārši sadalot tvītu tekstus pēc whitespace)
 			String allTweets = "";
 			 
-			for (Node node : trainingSet) {
-				Element eNode = (Element) node;
-				//String label = eNode.getAttribute("label");
-				String content = eNode.getElementsByTagName("content").item(0).getTextContent();
+			for (Tweet tweet : trainingSet) {
+				
+				String content = tweet.getContent();
 				
 				allTweets += content;
 			}
 			
-			List<String> allUniqueUnigrams = getUniqueUnigrams(allTweets);
+			List<String> allUniqueUnigrams = Unigram.getUniqueUnigrams(allTweets);
 			System.out.println("Total number of unique unigrams: "+ allUniqueUnigrams.size());
 			// Ģenerē apmācības kopu
 			Instances isTrainingSet = generateSet("ApmacibasKopa", trainingSet, allUniqueUnigrams);
@@ -99,7 +99,7 @@ public class K2Weka {
 			}
 			
 			// Izveidojam Majority klasifikatoru
-			MajorityKlasifikators majModel = new MajorityKlasifikators();
+			Majority majModel = new Majority();
 			majModel.buildClassifier(isTrainingSet);
 			
 			// Notestē modeļus un pieglabā rezultātus
@@ -122,8 +122,8 @@ public class K2Weka {
 		System.out.println("Accuracy " + getAccuracy(majResults)+ " F1 " + getF1(majResults));
 	}
 	
-	public static List <Node> getTweets(){
-		List <Node> result = new ArrayList<Node>();
+	public static List <Tweet> getTweets(){
+		List <Tweet> result = new ArrayList<Tweet>();
 		String[] files = {"hcr/train.xml", "hcr/dev.xml", "hcr/test.xml"};
 		try {
 			for (String string : files) {
@@ -142,7 +142,7 @@ public class K2Weka {
 					Element eElement = (Element) nNode;
 					if ( tweetSentiments.contains( eElement.getAttribute("label") ) )
 					{
-						result.add(nNode);
+						result.add(new Tweet(nNode));
 					}
 				}
 			}
@@ -152,43 +152,43 @@ public class K2Weka {
 		return result;
 	}
 
-	public static List<String> getUniqueUnigrams(String content){
+//	public static List<String> getUniqueUnigrams(String content){
+//
+//		List<String> cleanedUnigrams = getUnigrams(content);
+//		
+//		Set<String> uniqueUnigrams = new HashSet<String>(cleanedUnigrams);
+////		System.out.println("Total unigrams: " + cleanedUnigrams.size());
+////		System.out.println("Unique unigrams: " + uniqueUnigrams.size());
+//		List<String> allUniqueUnigrams = new ArrayList<String>(uniqueUnigrams);
+//		return allUniqueUnigrams;
+//	}
+//	
+//	public static List<String> getUnigrams(String content){
+//		String[] allUnigrams = content.split("\\s+");
+//		List<String> cleanedUnigrams = new ArrayList<String>();
+//		for (String unigram : allUnigrams) {
+//			// replace words containing # @ and links with placeholders 
+//			if (unigram.contains("#") ){
+//				cleanedUnigrams.add("hashtag");
+//				continue;
+//			}
+//			if ( unigram.contains("@") ){
+//				cleanedUnigrams.add("user");
+//				continue;
+//			}
+//			if ( unigram.contains("http://") ){
+//				cleanedUnigrams.add("link");
+//				continue;
+//			}
+//			unigram = unigram.toLowerCase();
+//			unigram = unigram.replaceAll("[^A-Za-z0-9]", "");
+//			cleanedUnigrams.add(unigram);
+//		}
+//		
+//		return cleanedUnigrams;
+//	}
 
-		List<String> cleanedUnigrams = getUnigrams(content);
-		
-		Set<String> uniqueUnigrams = new HashSet<String>(cleanedUnigrams);
-//		System.out.println("Total unigrams: " + cleanedUnigrams.size());
-//		System.out.println("Unique unigrams: " + uniqueUnigrams.size());
-		List<String> allUniqueUnigrams = new ArrayList<String>(uniqueUnigrams);
-		return allUniqueUnigrams;
-	}
-	
-	public static List<String> getUnigrams(String content){
-		String[] allUnigrams = content.split("\\s+");
-		List<String> cleanedUnigrams = new ArrayList<String>();
-		for (String unigram : allUnigrams) {
-			// replace words containing # @ and links with placeholders 
-			if (unigram.contains("#") ){
-				cleanedUnigrams.add("hashtag");
-				continue;
-			}
-			if ( unigram.contains("@") ){
-				cleanedUnigrams.add("user");
-				continue;
-			}
-			if ( unigram.contains("http://") ){
-				cleanedUnigrams.add("link");
-				continue;
-			}
-			unigram = unigram.toLowerCase();
-			unigram = unigram.replaceAll("[^A-Za-z0-9]", "");
-			cleanedUnigrams.add(unigram);
-		}
-		
-		return cleanedUnigrams;
-	}
-
-	public static Instances generateSet(String title,  List <Node> nodeList, List<String> allUniqueUnigrams){
+	public static Instances generateSet(String title,  List <Tweet> tweetList, List<String> allUniqueUnigrams){
 
 		Attribute tweetSentiment = new Attribute("sentiment", tweetSentiments);
 		
@@ -202,29 +202,28 @@ public class K2Weka {
 		tweetAttributes.add(tweetSentiment);
 		
 		// Izveido jaunu piemēru kopu
-		Instances iSet = new Instances(title, tweetAttributes, nodeList.size());
+		Instances iSet = new Instances(title, tweetAttributes, tweetList.size());
 		// Set class index - Let it be last one
 		iSet.setClassIndex(allUniqueUnigrams.size() );
 		System.out.println("Create instances set...");
-		for (Node node : nodeList) {
-			Element eNode = (Element) node;
-			String label = eNode.getAttribute("label");
-			String content = eNode.getElementsByTagName("content").item(0).getTextContent();
+		for (Tweet tweet : tweetList) {
+			String label = tweet.getLabel();
+			String content = tweet.getContent();
 			
-			List<String> tweetUniqueUnigrams = getUniqueUnigrams(content);
-			List<String> tweetUnigrams = getUnigrams(content);
+//			List<String> tweetUniqueUnigrams = getUniqueUnigrams(content);
+//			List<String> tweetUnigrams = getUnigrams(content);
 			// Izveido piemēru
 			Instance tweetInstance = new DenseInstance(allUniqueUnigrams.size()+1);
 //			Instance tweetInstance = new SparseInstance(allUniqueUnigrams.size()+1);
 			for (int i = 0; i < allUniqueUnigrams.size(); i++) {
-				int occurences = Collections.frequency(tweetUnigrams, allUniqueUnigrams.get(i));
-				tweetInstance.setValue((Attribute)tweetAttributes.elementAt(i), occurences);
-//				boolean contains = tweetUniqueUnigrams.contains(allUniqueUnigrams.get(i));
-//				if (contains){
-//					tweetInstance.setValue((Attribute)tweetAttributes.elementAt(i), 1);
-//				} else {
-//					tweetInstance.setValue((Attribute)tweetAttributes.elementAt(i), 0);
-//				}
+//				int occurences = Collections.frequency(tweet.unigrams, allUniqueUnigrams.get(i));
+//				tweetInstance.setValue((Attribute)tweetAttributes.elementAt(i), occurences);
+				boolean contains = tweet.uniqueUnigrams.contains(allUniqueUnigrams.get(i));
+				if (contains){
+					tweetInstance.setValue((Attribute)tweetAttributes.elementAt(i), 1);
+				} else {
+					tweetInstance.setValue((Attribute)tweetAttributes.elementAt(i), 0);
+				}
 			}
 			// Pievieno klases atribūtu pēdējā pozīcijā
 			tweetInstance.setValue((Attribute)tweetAttributes.elementAt(allUniqueUnigrams.size()), label);
